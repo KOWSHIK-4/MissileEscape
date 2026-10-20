@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07101d">
+  <meta name="description" content="A fast, neon arcade game. Outfly the heat-seeking missiles and see how long you can survive.">
+  <title>Missile Escape — Outfly the swarm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme: dark; --bg:#07101d; --panel:#0b1726; --line:#1a2a3e; --muted:#8291a6; --text:#edf5ff; --cyan:#5ee7ef; --orange:#ff835c; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; overflow-x:hidden; background:radial-gradient(ellipse at 50% -18%,#183452 0%,#0a1727 43%,var(--bg) 75%); color:var(--text); font-family:'Space Grotesk',sans-serif; }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.14; background-image:linear-gradient(rgba(133,184,220,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(133,184,220,.1) 1px,transparent 1px); background-size:48px 48px; mask-image:linear-gradient(to bottom,black,transparent 82%); }
+    .shell { position:relative; width:min(1080px,calc(100% - 40px)); margin:0 auto; padding:26px 0 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:21px; }
+    .brand { display:flex; align-items:center; gap:12px; font-size:14px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; }
+    .brand-mark { display:grid; width:35px; height:35px; place-items:center; border:1px solid #2b5268; border-radius:10px; color:var(--cyan); background:#102638; box-shadow:0 0 22px #45dbe522; }
+    .brand-mark svg { width:18px; }
+    .status { display:flex; align-items:center; gap:8px; color:#a7b6c9; font:11px 'DM Mono',monospace; letter-spacing:.12em; text-transform:uppercase; }
+    .status i { width:7px; height:7px; border-radius:50%; background:#6be3aa; box-shadow:0 0 10px #6be3aa; }
+    .heading { display:flex; align-items:end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+    h1 { margin:0; font-size:clamp(27px,4vw,39px); line-height:1; letter-spacing:-.055em; }
+    h1 span { color:var(--cyan); }
+    .tagline { margin:8px 0 0; color:var(--muted); font-size:13px; }
+    .best-chip { padding:9px 12px; border:1px solid var(--line); border-radius:8px; color:#aab8ca; background:#0a1522cc; font:11px 'DM Mono',monospace; white-space:nowrap; }
+    .best-chip strong { margin-left:8px; color:#f7cd70; font-weight:500; }
+    .game-frame { overflow:hidden; position:relative; border:1px solid #24374c; border-radius:13px; background:#07111e; box-shadow:0 25px 75px #0007,0 0 45px #60d7ef0c; }
+    .hud { position:absolute; z-index:2; inset:0 0 auto; display:flex; justify-content:space-between; align-items:flex-start; padding:17px 19px; pointer-events:none; background:linear-gradient(#07111ee8,transparent); }
+    .hud-group { display:flex; gap:24px; }
+    .hud-item { display:grid; gap:3px; }
+    .hud-label { color:#75879c; font:9px 'DM Mono',monospace; letter-spacing:.16em; }
+    .hud-value { color:#f0f7ff; font:17px 'DM Mono',monospace; }
+    .hud-value.score { color:var(--cyan); }
+    .lives { display:flex; gap:5px; align-items:center; min-height:20px; color:var(--orange); font-size:16px; letter-spacing:2px; text-shadow:0 0 10px #ff835c66; }
+    canvas { display:block; width:100%; height:auto; aspect-ratio:16/9; touch-action:none; }
+    .overlay { position:absolute; z-index:3; inset:0; display:grid; place-items:center; padding:70px 20px 24px; background:radial-gradient(ellipse at center,#08152250,#07101d77); text-align:center; }
+    .overlay.hidden { display:none; }
+    .card { max-width:420px; }
+    .eyebrow { margin:0 0 12px; color:var(--cyan); font:10px 'DM Mono',monospace; letter-spacing:.22em; text-transform:uppercase; }
+    .card h2 { margin:0; font-size:clamp(34px,6vw,54px); line-height:.95; letter-spacing:-.065em; }
+    .card h2 em { color:var(--cyan); font-style:normal; }
+    .card p { max-width:340px; margin:15px auto 21px; color:#a6b5c8; font-size:13px; line-height:1.6; }
+    .primary { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-width:164px; padding:12px 18px; border:0; border-radius:7px; color:#05131c; background:var(--cyan); font:700 12px 'Space Grotesk',sans-serif; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; transition:transform .15s,box-shadow .15s,background .15s; box-shadow:0 5px 24px #5ee7ef2b; }
+    .primary:hover { transform:translateY(-2px); background:#8af4f2; box-shadow:0 8px 30px #5ee7ef45; }
+    .primary:focus-visible { outline:2px solid white; outline-offset:4px; }
+    .keys { margin-top:17px; color:#748499; font:10px 'DM Mono',monospace; }
+    kbd { display:inline-block; min-width:23px; margin:0 2px; padding:4px 5px; border:1px solid #2a3a4d; border-radius:4px; color:#c4d0de; background:#111e2d; font:10px 'DM Mono',monospace; }
+    .footer { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:13px; color:#718196; font:10px 'DM Mono',monospace; letter-spacing:.05em; }
+    .footer .hint { display:flex; align-items:center; gap:7px; }
+    .footer svg { width:14px; height:14px; color:#87a0b8; }
+    .pause-btn { border:1px solid #26384c; border-radius:5px; padding:6px 9px; color:#a8b7c9; background:#0a1624; font:10px 'DM Mono',monospace; cursor:pointer; }
+    @media(max-width:600px) { .shell{width:calc(100% - 24px);padding-top:17px}.heading{align-items:start}.best-chip{font-size:9px;padding:8px}.hud{padding:12px}.hud-group{gap:13px}.hud-value{font-size:14px}.hud-label{font-size:8px}.footer{font-size:9px}.status{font-size:9px}.overlay{padding-top:55px}.card p{font-size:12px;margin:12px auto 16px} }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8 14.4 10l6.8 2-6.8 2-2.4 7.2L9.6 14l-6.8-2 6.8-2L12 2.8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m17.7 4.8.6 1.8 1.8.6-1.8.6-.6 1.8-.6-1.8-1.8-.6 1.8-.6.6-1.8Z" fill="currentColor"/></svg></span> Orbital arcade</div>
+      <div class="status"><i></i> Flight systems online</div>
+    </header>
+    <section class="heading" aria-label="Game title and record">
+      <div><h1>MISSILE <span>ESCAPE</span></h1><p class="tagline">They've got a lock. Don't let them keep it.</p></div>
+      <div class="best-chip">PERSONAL BEST <strong id="best">00000</strong></div>
+    </section>
+    <section class="game-frame" aria-label="Missile Escape game">
+      <div class="hud" aria-live="polite">
+        <div class="hud-group"><div class="hud-item"><span class="hud-label">SCORE</span><span class="hud-value score" id="score">00000</span></div><div class="hud-item"><span class="hud-label">TIME</span><span class="hud-value" id="time">00:00</span></div></div>
+        <div class="hud-item" style="text-align:right"><span class="hud-label">HULL</span><span class="lives" id="lives" aria-label="3 lives">♥ ♥ ♥</span></div>
+      </div>
+      <canvas id="game" width="960" height="540" aria-label="Game field. Move with arrow keys or WASD to avoid missiles."></canvas>
+      <div class="overlay" id="overlay">
+        <div class="card"><p class="eyebrow" id="eyebrow">✦ &nbsp; Evasive action required</p><h2 id="title">OUTFLY<br><em>THE SWARM.</em></h2><p id="message">Pilot, the missiles are tracking your ship. Stay airborne, keep moving, and don't let them catch you.</p><button class="primary" id="start"><span id="buttonText">Launch flight</span><span aria-hidden="true">↗</span></button><div class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> &nbsp; MOVE</div></div>
+      </div>
+    </section>
+    <footer class="footer"><span class="hint"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a7 7 0 0 0-4 12.74c.7.5 1 1.06 1 1.76h6c0-.7.3-1.26 1-1.76A7 7 0 0 0 12 3Z" stroke="currentColor" stroke-width="1.5"/><path d="M9 21h6m-5-3v3m4-3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Tip: sharp turns make missiles collide with each other</span><button class="pause-btn" id="pause" aria-label="Pause game">SPACE &nbsp; PAUSE</button></footer>
+  </main>
+  <script>
+    (() => {
+      const canvas = document.querySelector('#game');
+      const ctx = canvas.getContext('2d');
+      const overlay = document.querySelector('#overlay');
+      const startButton = document.querySelector('#start');
+      const pauseButton = document.querySelector('#pause');
+      const scoreDisplay = document.querySelector('#score');
+      const timeDisplay = document.querySelector('#time');
+      const livesDisplay = document.querySelector('#lives');
+      const bestDisplay = document.querySelector('#best');
+      const W = 960, H = 540;
+      const keys = new Set();
+      let state = 'ready', player, missiles, particles, stars, elapsed, score, lives, lastFrame = 0, spawnClock = 0, invulnerable = 0;
+      let highScore = Number(localStorage.getItem('missileEscapeBest') || 0);
+      bestDisplay.textContent = String(highScore).padStart(5, '0');
+      stars = Array.from({length:110}, () => ({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+.3,a:Math.random()*.5+.2,s:Math.random()*.35+.08}));
+
+      function reset() {
+        player = {x:W/2,y:H*.62,vx:0,vy:0,r:11,trail:[]}; missiles = []; particles = [];
+        elapsed = 0; score = 0; lives = 3; spawnClock = .45; invulnerable = 0;
+        scoreDisplay.textContent = '00000'; timeDisplay.textContent = '00:00'; updateLives();
+      }
+      function updateLives() { livesDisplay.textContent = lives > 0 ? Array(lives).fill('♥').join(' ') : '—'; livesDisplay.setAttribute('aria-label', `${lives} lives`); }
+      function startGame() { reset(); state = 'playing'; overlay.classList.add('hidden'); lastFrame = performance.now(); requestAnimationFrame(loop); }
+      function showOverlay(kind) {
+        state = kind; overlay.classList.remove('hidden');
+        document.querySelector('#eyebrow').textContent = kind === 'over' ? '✦  Flight terminated' : '✦  Evasive action required';
+        document.querySelector('#title').innerHTML = kind === 'over' ? 'YOU WERE<br><em>OUTFLANKED.</em>' : 'OUTFLY<br><em>THE SWARM.</em>';
+        document.querySelector('#message').textContent = kind === 'over' ? `You survived ${formatTime(elapsed)} and scored ${String(score).padStart(5,'0')}. Ready to take another run?` : "Pilot, the missiles are tracking your ship. Stay airborne, keep moving, and don't let them catch you.";
+        document.querySelector('#buttonText').textContent = kind === 'over' ? 'Fly again' : 'Launch flight';
+      }
+      function formatTime(seconds) { const n = Math.floor(seconds); return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`; }
+      function missile() {
+        const edge = Math.floor(Math.random()*4); let x,y;
+        if(edge===0){x=Math.random()*W;y=-16} else if(edge===1){x=W+16;y=Math.random()*H} else if(edge===2){x=Math.random()*W;y=H+16} else {x=-16;y=Math.random()*H}
+        const angle = Math.atan2(player.y-y,player.x-x);
+        const speed = 92 + Math.min(elapsed*1.25,100) + Math.random()*23;
+        missiles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,speed,angle,r:8+Math.random()*2,turn:1.3+Math.random()*.5,trail:[],dead:false});
+      }
+      function burst(x,y,color,count=12) { for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,s=35+Math.random()*180;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.35+Math.random()*.55,max:.9,color,r:1+Math.random()*2.3});} }
+      function update(dt) {
+        elapsed += dt; score = Math.floor(elapsed*10); scoreDisplay.textContent = String(score).padStart(5,'0'); timeDisplay.textContent = formatTime(elapsed);
+        const accel = 390, maxSpeed = 255;
+        let ix = (keys.has('ArrowRight')||keys.has('d')?1:0)-(keys.has('ArrowLeft')||keys.has('a')?1:0);
+        let iy = (keys.has('ArrowDown')||keys.has('s')?1:0)-(keys.has('ArrowUp')||keys.has('w')?1:0);
+        if(ix&&iy){ix*=.707;iy*=.707}
+        player.vx += ix*accel*dt; player.vy += iy*accel*dt;
+        player.vx *= Math.pow(ix ? .93 : .86,dt*60); player.vy *= Math.pow(iy ? .93 : .86,dt*60);
+        player.vx=Math.max(-maxSpeed,Math.min(maxSpeed,player.vx)); player.vy=Math.max(-maxSpeed,Math.min(maxSpeed,player.vy));
+        player.x=Math.max(18,Math.min(W-18,player.x+player.vx*dt)); player.y=Math.max(55,Math.min(H-18,player.y+player.vy*dt));
+        player.trail.unshift({x:player.x,y:player.y}); if(player.trail.length>12)player.trail.pop();
+        if(invulnerable>0)invulnerable-=dt;
+        spawnClock-=dt; const interval=Math.max(.38,1.45-elapsed*.012);
+        if(spawnClock<=0){missile();if(elapsed>16&&Math.random()<.25)missile();spawnClock=interval;}
+        for(const m of missiles){
+          const desired=Math.atan2(player.y-m.y,player.x-m.x); let diff=(desired-m.angle+Math.PI*3)%(Math.PI*2)-Math.PI;
+          m.angle += Math.max(-m.turn*dt,Math.min(m.turn*dt,diff));
+          const speed=m.speed+Math.min(elapsed*.9,75);m.vx=Math.cos(m.angle)*speed;m.vy=Math.sin(m.angle)*speed;m.x+=m.vx*dt;m.y+=m.vy*dt;
+          m.trail.unshift({x:m.x,y:m.y});if(m.trail.length>10)m.trail.pop();
+          if(invulnerable<=0&&Math.hypot(player.x-m.x,player.y-m.y)<player.r+m.r){m.dead=true;lives--;updateLives();invulnerable=1.65;burst(player.x,player.y,'#65e8ef',25);if(lives<=0){finish();return;}}
+          if(m.x < -55 || m.x > W+55 || m.y < -55 || m.y > H+55) m.dead=true;
+        }
+        for(let i=0;i<missiles.length;i++)for(let j=i+1;j<missiles.length;j++){
+          const a=missiles[i],b=missiles[j];if(!a.dead&&!b.dead&&Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r){a.dead=b.dead=true;burst((a.x+b.x)/2,(a.y+b.y)/2,'#ff835c',16);score+=25;}
+        }
+        missiles=missiles.filter(m=>!m.dead);
+        particles=particles.filter(p=>{p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.97;p.vy*=.97;return p.life>0;});
+        for(const s of stars){s.y+=s.s*dt*30;if(s.y>H){s.y=0;s.x=Math.random()*W;}}
+      }
+      function finish() { state='over'; if(score>highScore){highScore=score;localStorage.setItem('missileEscapeBest',highScore);bestDisplay.textContent=String(highScore).padStart(5,'0');}showOverlay('over'); }
+      function draw() {
+        ctx.clearRect(0,0,W,H);
+        const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#091625');bg.addColorStop(.55,'#07121f');bg.addColorStop(1,'#091827');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+        for(const s of stars){ctx.globalAlpha=s.a;ctx.fillStyle='#b9deef';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
+        ctx.strokeStyle='#294158';ctx.globalAlpha=.22;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,44);ctx.lineTo(W,44);ctx.moveTo(0,H-1);ctx.lineTo(W,H-1);ctx.stroke();ctx.globalAlpha=1;
+        for(const p of particles){ctx.globalAlpha=Math.min(1,p.life/p.max);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
+        for(const m of missiles){for(let i=m.trail.length-1;i>=0;i--){const t=m.trail[i];ctx.globalAlpha=(1-i/m.trail.length)*.18;ctx.fillStyle='#ff725a';ctx.beginPath();ctx.arc(t.x,t.y,m.r*(1-i/m.trail.length)*.8,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;ctx.save();ctx.translate(m.x,m.y);ctx.rotate(m.angle);ctx.shadowColor='#ff765c';ctx.shadowBlur=12;ctx.fillStyle='#ff805f';ctx.beginPath();ctx.moveTo(m.r+4,0);ctx.lineTo(-m.r,-m.r*.58);ctx.lineTo(-m.r*.68,0);ctx.lineTo(-m.r,m.r*.58);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#ffe1a5';ctx.fillRect(-m.r*.62,-1.4,m.r*1.1,2.8);ctx.restore();}
+        if(player){ctx.save();if(invulnerable>0&&Math.floor(invulnerable*12)%2===0)ctx.globalAlpha=.3;for(let i=player.trail.length-1;i>=0;i--){const t=player.trail[i];ctx.globalAlpha=(1-i/player.trail.length)*.13;ctx.fillStyle='#5ee7ef';ctx.beginPath();ctx.arc(t.x,t.y,player.r*(1-i/player.trail.length),0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;ctx.save();ctx.translate(player.x,player.y);ctx.rotate(Math.atan2(player.vy,player.vx||1)+Math.PI/2);ctx.shadowColor='#5ee7ef';ctx.shadowBlur=18;ctx.fillStyle='#72f1f0';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(10,12);ctx.lineTo(0,8);ctx.lineTo(-10,12);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#e8ffff';ctx.beginPath();ctx.arc(0,-2,3.2,0,Math.PI*2);ctx.fill();if(Math.hypot(player.vx,player.vy)>20){ctx.fillStyle='#ffb86b';ctx.beginPath();ctx.moveTo(-4,10);ctx.lineTo(0,17+Math.random()*7);ctx.lineTo(4,10);ctx.fill();}ctx.restore();ctx.restore();}
+      }
+      function loop(now) { if(state!=='playing')return;const dt=Math.min((now-lastFrame)/1000,.035);lastFrame=now;update(dt);draw();if(state==='playing')requestAnimationFrame(loop); }
+      startButton.addEventListener('click',()=>{if(state==='paused'){state='playing';overlay.classList.add('hidden');lastFrame=performance.now();requestAnimationFrame(loop);}else startGame();});
+      pauseButton.addEventListener('click',()=>{if(state==='playing'){state='paused';showOverlay('paused');document.querySelector('#eyebrow').textContent='✦  Flight on hold';document.querySelector('#title').innerHTML='TAKE A<br><em>BREATHER.</em>';document.querySelector('#message').textContent='Your ship is holding position. The swarm can wait.';document.querySelector('#buttonText').textContent='Resume flight';}else if(state==='paused'){state='playing';overlay.classList.add('hidden');lastFrame=performance.now();requestAnimationFrame(loop);}});
+      window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k===' '){if(state==='playing')pauseButton.click();else if(state==='paused')pauseButton.click();return;}keys.add(k);});
+      window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
+      canvas.addEventListener('pointermove',e=>{if(state!=='playing'||e.pointerType==='mouse')return;const r=canvas.getBoundingClientRect();player.x=(e.clientX-r.left)/r.width*W;player.y=(e.clientY-r.top)/r.height*H;});
+      canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&state==='ready')startGame();});
+      reset();draw();
+    })();
+  </script>
+</body>
+</html>
