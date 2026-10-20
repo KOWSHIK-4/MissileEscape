@@ -14,4 +14,4 @@ Your personal best is saved in the browser.
 
 ## Deploy
 
-The included GitHub Actions workflow enables GitHub Pages and deploys the site whenever changes are pushed to `main`. The published URL is shown on the repository's **Settings → Pages** page and in the deployment workflow run.
+In the repository's **Settings → Pages → Build and deployment**, choose **GitHub Actions** once to enable Pages. After that, the included workflow deploys the site whenever changes are pushed to `main`. The published URL is shown on the Pages settings page and in the deployment workflow run.
